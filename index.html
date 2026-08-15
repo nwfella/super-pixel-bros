@@ -645,7 +645,7 @@ const LEVELS=[
     {t:'brick',x:40,y:13},{t:'brick',x:41,y:13},{t:'qm',x:42,y:13},
     {t:'goomba',x:14,y:14},{t:'goomba',x:30,y:14},{t:'goomba',x:36,y:14},
     {t:'stairs',x:46,n:3},
-    {t:'pipe',x:51,y:2},
+    {t:'pipe',x:50,y:2},
     {t:'coin',x:53,y:12},{t:'coin',x:54,y:11},{t:'coin',x:55,y:12},
     {t:'goomba',x:44,y:11},
     {t:'q',x:58,y:13},{t:'q',x:64,y:13},{t:'q',x:65,y:13},
@@ -697,7 +697,7 @@ const LEVELS=[
     {t:'coin',x:83,y:11},{t:'coin',x:84,y:11},{t:'coin',x:85,y:11},
     {t:'goomba',x:88,y:14},
     {t:'stairs',x:92,n:3},
-    {t:'pipe',x:97,y:2},
+    {t:'pipe',x:96,y:2},
     {t:'spiny',x:103,y:14},{t:'spiny',x:106,y:14},
     {t:'q',x:105,y:13},
     {t:'pipe',x:110,y:3},
@@ -735,7 +735,9 @@ function buildLevel(idx){
       case 'coin': coins.push({x:it.x*TILE+TILE/2, y:it.y*TILE+TILE/2, taken:false}); break;
       case 'pipe':{
         const h=it.y;
-        for(let r=0;r<h;r++){ grid[GROUND_ROW-r][it.x]=6; grid[GROUND_ROW-r][it.x+1]=6; }
+        // pipe cells only ABOVE the ground row (r=1..h): the ground layer below
+        // stays continuous — pipes are an overlay, never a ground replacement
+        for(let r=1;r<=h;r++){ grid[GROUND_ROW-r][it.x]=6; grid[GROUND_ROW-r][it.x+1]=6; }
         pipes.push({x:it.x, y:GROUND_ROW-h, h});
         break;
       }
@@ -1341,12 +1343,12 @@ function drawTile(t,sx,sy,r,c,w){
 function drawPipes(w){
   for(const p of w.pipes){
     const sx=p.x*TILE-G.camX, sy=p.y*TILE;
-    const h=p.h*TILE;
-    // body
-    ctx.fillStyle='#2ea838'; ctx.fillRect(sx,sy,TILE*2,h);
-    ctx.fillStyle='#1a6a22'; ctx.fillRect(sx,sy+h-4,TILE*2,4); ctx.fillRect(sx+TILE*2-4,sy,4,h);
-    ctx.fillStyle='#5ade68'; ctx.fillRect(sx+6,sy+8,6,h-14);
-    ctx.fillStyle='#eaffea'; ctx.fillRect(sx+7,sy+9,2,h-16);
+    const bodyH=p.h*TILE+6;               // base sinks 6px into the ground (flush, no gap)
+    // body — drawn as an overlay on top of the ground tiles
+    ctx.fillStyle='#2ea838'; ctx.fillRect(sx,sy,TILE*2,bodyH);
+    ctx.fillStyle='#1a6a22'; ctx.fillRect(sx,sy+bodyH-4,TILE*2,4); ctx.fillRect(sx+TILE*2-4,sy,4,bodyH);
+    ctx.fillStyle='#5ade68'; ctx.fillRect(sx+6,sy+8,6,bodyH-14);
+    ctx.fillStyle='#eaffea'; ctx.fillRect(sx+7,sy+9,2,bodyH-16);
     // rim
     ctx.fillStyle='#2ea838'; ctx.fillRect(sx-4,sy-10,TILE*2+8,14);
     ctx.fillStyle='#1a6a22'; ctx.fillRect(sx-4,sy+4,TILE*2+8,3); ctx.fillRect(sx+TILE*2+4,sy-10,4,14);
